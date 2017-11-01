@@ -10,6 +10,7 @@ var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
+
 mongoose.connect('mongodb://localhost/printeasy');
 mongoose.Promise = require('bluebird');
 var db = mongoose.connection;
@@ -24,6 +25,13 @@ var app        = express();                 // define our app using express
 app.set('views', path.join(__dirname, 'views'));
 app.engine('handlebars',exphbs({defaultLayout:'layout'}));
 app.set('view engine', 'handlebars');
+var hbs = require('handlebars');
+hbs.registerHelper("fecha", function(date) {
+
+      dateString = date.toString();
+
+      return Date.parse(dateString);});
+
 
 //BodyParser Middleware
 app.use(bodyParser.json()); 

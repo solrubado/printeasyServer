@@ -25,6 +25,7 @@
     <![endif]-->
 
 </head>
+ 
 
 {{#if user}}
 <body>
@@ -78,10 +79,12 @@
 
         <!-- Project One -->
         {{# each documents}}
+
         <div class="row">
             <div class="col-md-5">
                 <h3>{{this.name}}</h3>
-                <h4>{{this.printed_at}}</h4>
+                <h4 >{{this.date}}</h4>
+                
             </div>
           <a class="btn btn-primary" href="/print">Imprimir <span class="glyphicon glyphicon-chevron-right"></span></a>
         </div>
@@ -89,7 +92,7 @@
         <hr>
         <!-- /.row -->
 
-
+   
         <!-- Pagination -->
       
         <!-- /.row -->
@@ -109,6 +112,11 @@
     </div>
     <!-- /.container -->
 
+<script>
+function convertDate(value){
+    Date.parse(value.toString);
+}
+</script>
     <!-- jQuery -->
     <script src="js/jquery.js"></script>
 

@@ -43,7 +43,46 @@ router.get('/payment', ensureAuthenticated, function(req,res){
 router.get('/history', ensureAuthenticated, function(req,res){
 	File.getFilePrintedByUsername(usernameLogged, function(err,documents){
   	if(err) throw err;
+        console.log("Got a response: ", documents);
 	res.render('history', {documents:documents});
+	});
+});
+
+router.post('/loginAndroid',
+ passport.authenticate('local',{successRedirect:'', failureRedirect:''}),
+ 	function(req, res) {
+ 		res.writeHead(200, {"Content-Type": "application/json"});
+  	res.end(); 
+ 		
+  
+  });
+  
+
+router.get('/historyAndroid', function(req,res){
+	File.getFilePrintedByUsername(usernameLogged, function(err,documents){
+  	if(err) throw err;
+	res.writeHead(200, {"Content-Type": "application/json"});
+  	var json = JSON.stringify({ documents: documents});
+  	res.end(json);
+    
+	});
+});
+
+router.get('/paymentAndroid', function(req,res){
+	Payment.getPaymentByUsername(usernameLogged, function(err,payments){
+  	if(err) throw err;
+	res.writeHead(200, {"Content-Type": "application/json"});
+  	var json = JSON.stringify({ payments: payments});
+  	res.end(json);
+	});
+});
+
+router.get('/documentsAndroid', function(req,res){
+	File.getFileToPrintByUsername(usernameLogged, function(err,documents){
+  	if(err) throw err;
+	res.writeHead(200, {"Content-Type": "application/json"});
+  	var json = JSON.stringify({ documents: documents});
+  	res.end(json);
 	});
 });
 
@@ -133,6 +172,14 @@ router.get('/upload', ensureAuthenticated, function(req,res){
 	res.render('upload');
 });
 
+router.get('/delete/:id', ensureAuthenticated, function(req,res){
+var id = req.param("id");
+	File.removeFile(id, function(err){
+  	if(err) throw err;	
+});
+res.redirect('/main');
+});
+
 function ensureAuthenticated(req,res,next){
 	if(req.isAuthenticated()){
 		return next();
@@ -216,6 +263,8 @@ router.post('/login',
   
   });
 
+
+
 router.get('/logout', function(req,res){
 	req.logout();
 	req.flash('success_msg','Sesión cerrada correctamente');
@@ -254,12 +303,14 @@ router.post('/upload', function(req, res){
 
   // log any errors that occur
   form.on('error', function(err) {
-    console.log('An error has occured: \n' + err);
+     res.writeHead(500, {"Content-Type": "application/json"});
+  	res.end();
   });
 
   // once all the files have been uploaded, send a response to the client
   form.on('end', function() {
-    res.end('success');
+    res.writeHead(200, {"Content-Type": "application/json"});
+  	res.end();
   });
 
   // parse the incoming request containing the form data

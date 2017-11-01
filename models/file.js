@@ -1,6 +1,8 @@
 var mongoose = require('mongoose');
 
 var bcrypt=require('bcryptjs');
+var dateFormat = require('dateformat');
+
 
 
 var FileSchema = mongoose.Schema({
@@ -44,6 +46,7 @@ module.exports.getFileById = function(id, callback){
 	File.find(query,callback);
 }
 
+
 module.exports.findByName = function(name, callback){
   var query = {name: name};
   File.find(query,callback);
@@ -56,13 +59,30 @@ module.exports.setFileAsPrinted = function(filename, callback){
   else {
     // do your updates here
     file.isPrinted = true;
-    file.printed_at = new Date();
+    file.printed_at = dateFormat(new Date(), "dd-mm-yyyy h:MM:ss");
     console.log("Archivo: "+file.name+" ,impreso: "+file.isPrinted);
     file.save(function(err) {   
       if (err)
         console.log('error')
       else
         console.log('success')
+    });
+  }
+});
+}
+
+module.exports.removeFile = function(id, callback){
+  File.findOne({id: id}, function(err, file) {
+  if (!file)
+    console.log('Could not find file');
+  else {
+    // do your updates here
+    file.remove(function(err) {   
+      if (err)
+        console.log('error')
+      else
+        console.log('success')
+
     });
   }
 });
