@@ -7,6 +7,8 @@ var passport = require('passport');
 var LocalStrategy = require ('passport-local').Strategy;
 var User = require('../models/user')
 var usernameLogged;
+var numHojas = 0;
+var copias;
 var Payment = require('../models/payment')
 var File = require('../models/file')
 var Printer = require('zuzel-printer');
@@ -24,6 +26,54 @@ router.get('/login', function(req,res){
 	res.render('login');
 });
 
+router.get('/dashboard', function(req,res){
+ execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Tri-color\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkTricolor = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkBlack = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
+	inklevel = printerqueue.split("is ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split("|");
+	var pagecount = inkPorcentage[0];
+	var stringPagecount = pagecount.replace(",","");
+	var intPageCount = parseInt(stringPagecount,10);
+	var porcentagePagecount = (intPageCount%500)*100/500;
+	var numberPagecount = (intPageCount%500);
+	var data = JSON.stringify([{
+  		"title": "Tinta Tricolor",
+  		"description": "Rojo - Magenta - Amarillo",
+  		"porcentage": inkTricolor,
+  		"number": parseInt(inkTricolor,10),
+		"total":100
+		},{
+  		"title": "Tinta Negra",
+  		"description": "Negro",
+  		"porcentage": inkBlack,
+  		"number": parseInt(inkBlack,10),
+		"total":100
+		},{
+  		"title": "Cantidad Hojas",
+  		"description": "Hojas impresas",
+  		"porcentage": porcentagePagecount+"%",
+  		"number": numberPagecount,
+		"total":500
+		}]);
+
+	var values = JSON.parse(data);
+	console.log(values);
+ 	res.render('dashboard', {values:values});
+		});
+            });
+        });
+	
+});
 //Get Main Page
 
 router.get('/main', ensureAuthenticated, function(req,res){
@@ -89,12 +139,12 @@ router.get('/documentsAndroid', function(req,res){
 router.post('/print/:filename', function(req,res){	
 	var papersize = req.body.papersize;
 	var hojas = req.body.hojas;
-	var copias = req.body.copias;
+	copias = req.body.copias;
+	
 
 if(hojas==""){
     var options = {
     	n: copias,
-    	P: hojas,
     	media: papersize
 	};
 }else{
@@ -109,7 +159,9 @@ var filename = req.param("filename");
 console.log(Printer.list());
 console.log(""+papersize);
 console.log(""+hojas);
-console.log(""+copias);
+
+
+console.log("Cantidad de copias: "+copias);
 console.log('/uploads/'+usernameLogged+'_'+filename);
 
 var printer = new Printer('Deskjet-3050-J610-series');
@@ -119,23 +171,36 @@ var jobFromFile = printer.printFile(filePath, options);
 
 jobFromFile.once('sent', function () {
     console.log('Job ' + jobFromFile.identifier + ' has been sent');
-	res.redirect('/main');
-
-
+    res.redirect('/main');
 });
 
+if(hojas.includes('-')){
+	var fields = hojas.split('-');
+	var from = fields[0];
+	var to = fields[1];
+	var fromNumber = parseInt(from,10);
+	var toNumber = parseInt(to,10);
+	numHojas = toNumber-fromNumber+1;
+}else if(hojas.includes(',')){
+	numHojas=(hojas.match(/,/g) || []).length+1;
+}else if(hojas){
+	numHojas=parseInt(hojas,10);
+}
+
+
 jobFromFile.on('completed', function () {
-	File.setFileAsPrinted(filename,function(err,documents){
-  	if(err) throw err;
-	});
+
 	var filePath = path.join(__dirname, '/uploads/'+usernameLogged+'_'+filename);
 
 	require('pdfjs-dist');
 	var fs = require('fs');
 	var data = new Uint8Array(fs.readFileSync(filePath));
+	
+	
+	if(numHojas===undefined || numHojas===0){
 	PDFJS.getDocument(data).then(function (pdfDocument) {
-  	console.log('Precio: ' + pdfDocument.numPages*1.85);
-  	var price = pdfDocument.numPages*1.85;
+  	console.log('Precio: ' + pdfDocument.numPages*1.85*copias);
+  	var price = pdfDocument.numPages*1.85*copias;
   	var pages = pdfDocument.numPages;
 
   	var idString= uuid.v4();
@@ -150,22 +215,41 @@ jobFromFile.on('completed', function () {
 		if(err) throw err;
 		console.log(newPayment);
 	});
-
-	})
+	});
+	}else{
+  	var price = numHojas*1.85*copias;
+  	var pages = numHojas;
+	var idString= uuid.v4();
+	var newPayment = new Payment({
+		id: idString,
+  		filePrinted: filename,
+  		username: usernameLogged,
+  		pages: pages,
+  		price: price,
+		});
+    		Payment.createPayment(newPayment, function(err, user){
+		if(err) throw err;
+		console.log(newPayment);
+		});
+	}
+	
 
 	
 	console.log('\ncomplete\n');
     console.log('Job ' + jobFromFile.identifier + ' has been printed');
+
+
+	File.setFileAsPrinted(filename,function(err,documents){
+  	if(err) throw err;
+	});
+	
     jobFromFile.removeAllListeners();
     printer.destroy();
     
 });
 
 
-File.getFileToPrintByUsername(usernameLogged, function(err,documents){
-  	if(err) throw err;
-	res.render('main', {documents:documents});
-	});
+
 });
 
 router.get('/upload', ensureAuthenticated, function(req,res){
@@ -180,6 +264,77 @@ var id = req.param("id");
 res.redirect('/main');
 });
 
+router.get('/deleteAndroid/:id', function(req,res){
+var id = req.param("id");
+	File.removeFile(id, function(err){
+  	if(err) throw err;	
+});
+res.writeHead(200, {"Content-Type": "application/json"});
+  	res.end();
+});
+
+var exec = require('child_process').exec;
+function execute(command, callback){
+    exec(command, function(error, stdout, stderr){ callback(stdout); });
+};
+
+
+router.get('/isPrinterInUse', function(req,res){
+ execute("lpq", function(printerqueue){
+	var json = JSON.stringify({printerqueue});
+  	res.end(json);
+            
+        });
+    });
+
+router.get('/checkPrinter', function(req,res){
+ execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Tri-color\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkTricolor = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkBlack = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
+	inklevel = printerqueue.split("is ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split("|");
+	var pagecount = inkPorcentage[0];
+
+	var json = JSON.stringify({inkTricolor, inkBlack, pagecount});
+  	res.end(json);
+		});
+            });
+        });
+    });
+
+router.get('/checkInkBlack', function(req,res){
+ execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkBlack = inkPorcentage[0];
+	var json = JSON.stringify({inkBlack});
+  	res.end(json);
+            
+        });
+    });
+
+
+router.get('/checkPagecount', function(req,res){
+ execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
+	inklevel = printerqueue.split("is ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split("|");
+	var pagecount = inkPorcentage[0];
+	var json = JSON.stringify({pagecount});
+  	res.end(json);
+            
+        });
+    });
 function ensureAuthenticated(req,res,next){
 	if(req.isAuthenticated()){
 		return next();

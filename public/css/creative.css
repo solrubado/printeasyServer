@@ -380,6 +380,153 @@ fieldset[disabled] .btn-primary.active {
   background-color: #F05F40;
   border-color: #F05F40;
 }
+.block-content {
+  padding-top: 15px;
+}
+
+.task-row {
+  height: 75px;
+  padding: 15px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.task-row:last-child {
+  border-bottom: 1px solid transparent;
+}
+
+.priority {
+  width: 15%;
+  float: left;
+  line-height: 34px;
+}
+
+.priority a {
+  padding: 5px;
+}
+
+.priority.High a {
+  background: #f88;
+}
+
+.priority.Normal a {
+  background: #8f8;
+}
+
+.priority.Low a {
+  background: #88f;
+}
+
+.task-title {
+  width: 45%;
+  float: left;
+}
+
+.task-title h4 {
+  color: #555;
+  font-weight: bold;
+}
+
+.task-title h5 {
+  color: #999;
+}
+
+.task-status {
+  width: 20%;
+  float: left;
+  height: 34px;
+}
+
+.status-bar {
+  float: left;
+  height: 20px;
+  width: 90%;
+  padding: 7px 0;
+}
+
+.status-track {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background: #ebebeb;
+  border-radius: 3px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.status-fill {
+  position: relative;
+  background: #8CE2FF;
+  border-radius: 3px;
+  height: 20px;
+  width: 50%;
+  /*default*/
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.status-text {
+  position: absolute;
+  left: 50%;
+  margin-left: -20px;
+  /* sketchy center-it: 50% -->  then 1/2 width <--  */
+  color: #656565;
+  text-align: center;
+  font-family: "Lato","Verdana",sans-serif;
+  font-size: 12px;
+  line-height: 20px;
+  font-weight: bold;
+  z-index: 100;
+  display: inline-block;
+  width: 40px;
+}
+
+.task-time {
+  width: 20%;
+  float: left;
+  height: 34px;
+  line-height: 34px;
+}
+
+.task-time a {
+  font-size: 12px;
+  color: #555;
+  font-weight: bold;
+}
+
+.task-time small {
+  color: #999;
+  font-weight: normal;
+}
+
+/* Tooltips */
+.tooltip {
+  display: inline;
+  position: relative;
+}
+
+.tooltip:hover:after {
+  background: #333;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 5px;
+  bottom: 26px;
+  color: #fff;
+  content: attr(tooltip);
+  left: 20%;
+  padding: 5px 15px;
+  position: absolute;
+  z-index: 98;
+  width: 220px;
+}
+
+.tooltip:hover:before {
+  border: solid;
+  border-color: #333 transparent;
+  border-width: 6px 6px 0 6px;
+  bottom: 20px;
+  content: "";
+  left: 50%;
+  position: absolute;
+  z-index: 99;
+}
+
 .btn-primary .badge {
   color: #F05F40;
   background-color: white;
