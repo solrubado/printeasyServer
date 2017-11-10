@@ -7,6 +7,7 @@ var passport = require('passport');
 var LocalStrategy = require ('passport-local').Strategy;
 var User = require('../models/user')
 var usernameLogged;
+var admin;
 var numHojas = 0;
 var copias;
 var Payment = require('../models/payment')
@@ -44,8 +45,8 @@ router.get('/dashboard', function(req,res){
 	var pagecount = inkPorcentage[0];
 	var stringPagecount = pagecount.replace(",","");
 	var intPageCount = parseInt(stringPagecount,10);
-	var porcentagePagecount = (intPageCount%500)*100/500;
-	var numberPagecount = (intPageCount%500);
+	var porcentagePagecount = (500-intPageCount%500)*100/500;
+	var numberPagecount = (500-intPageCount%500);
 	var data = JSON.stringify([{
   		"title": "Tinta Tricolor",
   		"description": "Rojo - Magenta - Amarillo",
@@ -60,7 +61,7 @@ router.get('/dashboard', function(req,res){
 		"total":100
 		},{
   		"title": "Cantidad Hojas",
-  		"description": "Hojas impresas",
+  		"description": "Hojas disponibles",
   		"porcentage": porcentagePagecount+"%",
   		"number": numberPagecount,
 		"total":500
@@ -291,23 +292,28 @@ router.get('/checkPrinter', function(req,res){
  execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Tri-color\"", function(printerqueue){
 	inklevel = printerqueue.split("at ");
 	var result= inklevel[1];
-	var inkPorcentage = result.split(" -");
-	var inkTricolor = inkPorcentage[0];
-	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
-	inklevel = printerqueue.split("at ");
-	var result= inklevel[1];
-	var inkPorcentage = result.split(" -");
-	var inkBlack = inkPorcentage[0];
-	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
-	inklevel = printerqueue.split("is ");
-	var result= inklevel[1];
-	var inkPorcentage = result.split("|");
-	var pagecount = inkPorcentage[0];
-
-	var json = JSON.stringify({inkTricolor, inkBlack, pagecount});
-  	res.end(json);
+	if(result.includes(" -")){
+		var inkPorcentage = result.split(" -");
+		var inkTricolor = inkPorcentage[0];
+		execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
+		inklevel = printerqueue.split("at ");
+		var result= inklevel[1];
+		var inkPorcentage = result.split(" -");
+		var inkBlack = inkPorcentage[0];
+		execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
+		inklevel = printerqueue.split("is ");
+		var result= inklevel[1];
+		var inkPorcentage = result.split("|");
+		var pagecount = inkPorcentage[0];
 		});
             });
+		var json = JSON.stringify({inkTricolor, inkBlack, pagecount});
+  		res.end(json);
+	}else{	
+		var json = JSON.stringify({result});
+  		res.end(json);
+	}
+		
         });
     });
 
@@ -349,6 +355,7 @@ router.post('/register', function(req,res){
 	console.log('Register');
 	var username = req.body.username;
 	var password = req.body.password;
+	var admin = req.body.admin;
 
 	//Validation
 	req.checkBody('username','El registro es obligatorio').notEmpty();
@@ -363,7 +370,8 @@ router.post('/register', function(req,res){
 	}else{
 		var newUser = new User({
 			username: username,
-			password: password
+			password: password,
+			admin: admin
 		});
 	
 	User.createUser(newUser, function(err, user){
@@ -387,10 +395,10 @@ passport.use(new LocalStrategy(
   			return done (null, false,{message: 'Usuario incorrecto'})
   		}
   		usernameLogged = username;
+		admin=user.admin;
   		User.comparePassword (password, user.password, function(err, isMatch){
   			if(err) throw err;
   			if(isMatch){
-
   				return done (null, user);
   			} else{
   				return done(null, false, {message: 'Contraseña incorrecta'});
@@ -411,10 +419,14 @@ passport.deserializeUser(function(id, done) {
 });
 
 router.post('/login',
-  passport.authenticate('local',{successRedirect:'/main', failureRedirect:'/login', failureFlash:true}),
+  passport.authenticate('local',{successRedirect:'', failureRedirect:'/login', failureFlash:true}),
  	function(req, res) {
- 		 db.dropDatabase();
- 		res.redirect('/main');
+		console.log("admin "+res.username);
+		if(admin===true){
+ 		res.redirect('/dashboard'); 
+		}else{
+ 		res.redirect('/main'); 		
+		}
   
   });
 
