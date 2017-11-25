@@ -4,6 +4,7 @@
   "description": "webpage for Printeasy system",
   "main": "app.js",
   "scripts": {
+    "prestart": "sudo service mongod start",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
