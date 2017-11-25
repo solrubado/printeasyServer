@@ -4,6 +4,8 @@
   "description": "webpage for Printeasy system",
   "main": "app.js",
   "scripts": {
+    "build": "npm-run-all build:*",
+    "postinstall": "npm run build",
     "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
