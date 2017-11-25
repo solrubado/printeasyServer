@@ -13,7 +13,7 @@ var copias;
 var Payment = require('../models/payment')
 var File = require('../models/file')
 var Printer = require('zuzel-printer');
-var uuid = require('node-uuid');
+var uuid = require('uuid');
 
 
 //Get Homepage
