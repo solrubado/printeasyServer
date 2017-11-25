@@ -119,6 +119,18 @@ router.get('/historyAndroid', function(req,res){
 	});
 });
 
+router.get('/see/:filename', function(req,res){
+var filename = req.param("filename");
+var filePath = path.join(__dirname, "uploads/"+usernameLogged+"_"+filename);
+console.log(filePath);
+fs.stat(filePath, function(err, fileInfo) {
+if(err) throw err;
+if (fileInfo.isFile()) {
+res.sendFile(filePath);
+}
+});
+});
+
 router.get('/paymentAndroid', function(req,res){
 	Payment.getPaymentByUsername(usernameLogged, function(err,payments){
   	if(err) throw err;
@@ -194,14 +206,14 @@ jobFromFile.on('completed', function () {
 	var filePath = path.join(__dirname, '/uploads/'+usernameLogged+'_'+filename);
 
 	require('pdfjs-dist');
-	var fs = require('fs');
+	
 	var data = new Uint8Array(fs.readFileSync(filePath));
 	
 	
 	if(numHojas===undefined || numHojas===0){
 	PDFJS.getDocument(data).then(function (pdfDocument) {
-  	console.log('Precio: ' + pdfDocument.numPages*1.85*copias);
-  	var price = pdfDocument.numPages*1.85*copias;
+  	console.log('Precio: ' + pdfDocument.numPages*1.5*copias);
+  	var price = pdfDocument.numPages*1.5*copias;
   	var pages = pdfDocument.numPages;
 
   	var idString= uuid.v4();
@@ -218,7 +230,7 @@ jobFromFile.on('completed', function () {
 	});
 	});
 	}else{
-  	var price = numHojas*1.85*copias;
+  	var price = numHojas*1.5*copias;
   	var pages = numHojas;
 	var idString= uuid.v4();
 	var newPayment = new Payment({

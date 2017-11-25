@@ -1,5 +1,6 @@
 var express    = require('express');        // call express
 var path	   = require('path');
+var fs = require("fs");
 var cookieParser = require ('cookie-parser'); 
 var bodyParser = require('body-parser');
 var exphbs = require('express-handlebars');

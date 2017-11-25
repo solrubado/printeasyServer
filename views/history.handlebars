@@ -41,7 +41,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">PrintEasy</a>
+                <a class="navbar-brand" href="/main">PrintEasy</a>
             </div>
             <!-- Collect the nav links, forms, and other content for toggling -->
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
@@ -86,7 +86,75 @@
                 <h4 >{{this.date}}</h4>
                 
             </div>
-          <a class="btn btn-primary" href="/print">Imprimir <span class="glyphicon glyphicon-chevron-right"></span></a>
+              
+            <button type="button" class="btn btn-primary myBtn" id="myBtn" value="{{this.name}}" onclick="doSomething(this.value)">IMPRIMIR</button>
+
+            <a type="button" class="btn myBtn" id="myBtn" value="{{this.name}}" href="/see/{{this.name}}">VER</a>
+
+            <div id="myModal" class="modal">
+  <!-- Modal content -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span class="close">&times;</span>
+                        <h2 id="title" id="title">Configuración</h2>
+                    </div>
+                    <div class="modal-body">
+                        <form id="configdata" name="configdata" >
+                            <label class="w3-text-brown"><b>Tipo de Hoja</b></label></br> 
+                            <input type="radio" name="papersize" value="letter" checked> Carta<br>
+                            <input type="radio" name="papersize" value="a4"> A4<br>
+                            <input type="radio" name="papersize" value="legal"> Oficio<br> <br>
+            
+                            <label class="w3-text-brown"><b>Hojas a imprimir (opcional)</b></label></br>  
+                            <input class="input" type="text" name="hojas" placeholder="1,2 o 3-5"><br><br>
+
+                            <label class="w3-text-brown"><b>Cantidad de copias</b></label></br> 
+                            <input class="input" type="number" name="copias" placeholder="1"></br> <br>    
+                            <button id="acceptprint" class="btn btn-primary btn-xl sr-button" value="{{this.name}}" onclick="postPrint(this.value)">Aceptar</button> 
+                        </form> 
+                    </div>
+                 </div>
+
+            </div>
+     
+
+  <script>
+// Get the modal
+var modal = document.getElementById('myModal');
+var title = document.getElementById('title');
+var filename;
+function doSomething(value) {
+    modal.style.display = "block";
+    filename = value;
+    document.getElementById("title").innerHTML = "Configuración "+value;
+    
+}
+
+
+function postPrint(value){
+    var form = document.getElementById("configdata");
+    form.action="/print/"+filename;
+    form.method="post";
+    form.submit();
+
+
+}
+
+// Get the button that opens the modal
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal 
+
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+}
+</script>
         </div>
             {{/each}}
         <hr>

@@ -93,6 +93,8 @@
     
             <button type="button" class="btn btn-primary myBtn" id="myBtn" value="{{this.name}}" onclick="doSomething(this.value)">IMPRIMIR</button>
 
+            <a type="button" class="btn myBtn" id="myBtn" value="{{this.name}}" href="/see/{{this.name}}">VER</a>
+
             <a type="button" class="btn myBtn" id="myBtn" value="{{this.id}}" href="/delete/{{this.id}}">ELIMINAR</a>
 
             <div id="myModal" class="modal">
@@ -109,7 +111,7 @@
                             <input type="radio" name="papersize" value="a4"> A4<br>
                             <input type="radio" name="papersize" value="legal"> Oficio<br> <br>
             
-                            <label class="w3-text-brown"><b>Hojas a imprimir</b></label></br>  
+                            <label class="w3-text-brown"><b>Hojas a imprimir (opcional)</b></label></br>  
                             <input class="input" type="text" name="hojas" placeholder="1,2 o 3-5"><br><br>
 
                             <label class="w3-text-brown"><b>Cantidad de copias</b></label></br> 
