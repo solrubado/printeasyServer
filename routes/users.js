@@ -118,6 +118,55 @@ router.get('/historyAndroid', function(req,res){
 	});
 });
 
+router.get('/dashboardAndroid', function(req,res){
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Tri-color\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkTricolor = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"CONSUM Black\"", function(printerqueue){
+	inklevel = printerqueue.split("at ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split(" -");
+	var inkBlack = inkPorcentage[0];
+	execute("/usr/local/nagios/libexec/check_snmp_printer -H 192.168.0.188 -C public -x \"PAGECOUNT\"", function(printerqueue){
+	inklevel = printerqueue.split("is ");
+	var result= inklevel[1];
+	var inkPorcentage = result.split("|");
+	var pagecount = inkPorcentage[0];
+	var stringPagecount = pagecount.replace(",","");
+	var intPageCount = parseInt(stringPagecount,10);
+	var porcentagePagecount = (500-intPageCount%500)*100/500;
+	var numberPagecount = (500-intPageCount%500);
+	var data = JSON.stringify([{
+  		"title": "Tinta Tricolor",
+  		"description": "Rojo - Magenta - Amarillo",
+  		"porcentage": inkTricolor,
+  		"number": parseInt(inkTricolor,10),
+		"total":100
+		},{
+  		"title": "Tinta Negra",
+  		"description": "Negro",
+  		"porcentage": inkBlack,
+  		"number": parseInt(inkBlack,10),
+		"total":100
+		},{
+  		"title": "Cantidad Hojas",
+  		"description": "Hojas disponibles",
+  		"porcentage": porcentagePagecount+"%",
+  		"number": numberPagecount,
+		"total":500
+		}]);
+
+	var values = JSON.parse(data);
+	res.writeHead(200, {"Content-Type": "application/json"});
+  	var json = JSON.stringify({ values: values});
+  	res.end(json);
+		});
+            });
+        });
+});
+
 router.get('/see/:filename', function(req,res){
 var filename = req.param("filename");
 var filePath = path.join(__dirname, "uploads/"+usernameLogged+"_"+filename);

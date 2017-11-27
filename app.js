@@ -12,7 +12,9 @@ var LocalStrategy = require('passport-local').Strategy;
 var mongo = require('mongodb');
 var mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost/printeasy');
+//mongoose.connect('mongodb://localhost/printeasy');
+
+mongoose.connect('mongodb://solrubado:mvpemq100v!@ds139470.mlab.com:39470/heroku_7s5kswqm');
 mongoose.Promise = require('bluebird');
 var db = mongoose.connection;
 
